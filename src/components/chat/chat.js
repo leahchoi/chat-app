@@ -4,6 +4,8 @@ import './chat.css';
 import {db} from '../../firebase';
 import {connect} from 'react-redux';
 import {updateChat} from '../../actions';
+import {reduxForm, Field} from 'redux-form';
+import Input from '../input';
 import './chat.css';
 
 class Chat extends Component {
@@ -15,8 +17,17 @@ class Chat extends Component {
     componentWillUnmount(){
         this.dbRef.off();
     }
+
+    sendMessage = ({message}) =>{
+        console.log('send message:', message)
+        const newMessage = {
+            name: localStorage.getItem('name'),
+            message
+        }
+        this.dbRef.push(newMessage);
+    }
     render(){
-        const {log} = this.props;
+        const {log, handleSubmit} = this.props;
 
         const chatElements = Object.keys(log).map(k => {
             const{name, message} = log[k];
@@ -32,6 +43,12 @@ class Chat extends Component {
                 <div className="row right-align">
                     <Link to='/' className= 'btn red darken-4'>Home</Link>
                 </div>
+                <p>Hello, {localStorage.getItem('name')}</p>
+                <div className="row">
+                    <form onSubmit={handleSubmit(this.sendMessage)} className='col s8 offset-s2'>
+                        <Field name='message' label='Message' component={Input}/>
+                    </form>
+                </div>
                 <ul className="collection">
                     {chatElements}
                 </ul>
@@ -39,6 +56,11 @@ class Chat extends Component {
         );
     }
 }
+
+Chat = reduxForm({
+    form: 'text-message',
+    validate: ({message}) => message ? {} : {message: 'No empty messages!'}
+})(Chat);
 
 function mapStateToProps(state){
     return {
